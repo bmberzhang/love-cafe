@@ -968,8 +968,10 @@
             if (tab === 'orders') {
                 await loadOrders();
             } else if (tab === 'profile') {
+                await loadSettings();
                 await updateStats();
             } else if (tab === 'home') {
+                await loadSettings();
                 cart = await API.get('/api/cart');
                 renderAll();
             }
@@ -1136,10 +1138,11 @@
         // 每 3 秒检查一次购物车和订单更新
         async function pollUpdates() {
             try {
-                const [newCart, orders, stats] = await Promise.all([
+                const [newCart, orders, stats, newSettings] = await Promise.all([
                     API.get('/api/cart'),
                     API.get('/api/orders'),
-                    API.get('/api/stats')
+                    API.get('/api/stats'),
+                    API.get('/api/settings')
                 ]);
 
                 // 检查购物车变化
@@ -1148,6 +1151,14 @@
                 if (oldCartStr !== newCartStr) {
                     cart = newCart;
                     renderAll();
+                }
+
+                // 检查设置变化（头像、昵称同步）
+                const oldSettingsStr = JSON.stringify(settings);
+                const newSettingsStr = JSON.stringify(newSettings);
+                if (oldSettingsStr !== newSettingsStr) {
+                    settings = newSettings;
+                    applySettings();
                 }
 
                 // 检查新订单
