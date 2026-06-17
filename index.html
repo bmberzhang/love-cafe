@@ -235,6 +235,13 @@
             color: white; border: none; padding: 14px 32px; border-radius: 24px; font-size: 15px; font-weight: 600; cursor: pointer;
         }
         .clear-cart { text-align: center; color: var(--text-light); font-size: 13px; margin-top: 12px; cursor: pointer; }
+        .btn-complete {
+            width: 100%; margin-top: 12px; padding: 12px; border-radius: 20px;
+            border: 1px solid var(--primary-light); background: var(--bg);
+            color: var(--primary-dark); font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-complete:active { background: var(--primary-light); }
         .toast {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: rgba(0,0,0,0.8); color: white; padding: 20px 30px;
@@ -648,6 +655,12 @@
             loadOrders();
         }
 
+        async function completeOrder(orderId) {
+            await API.post(`/api/orders/${orderId}/complete`, {});
+            showToast('✅ 已标记为完成！');
+            await loadOrders();
+        }
+
         async function loadOrders() {
             const orders = await API.get('/api/orders');
             const list = document.getElementById('orders-list');
@@ -683,6 +696,11 @@
                         <span>共计 ${order.items.reduce((a, b) => a + b.qty, 0)} 道菜</span>
                         <span>❤️ ${order.totalLove}</span>
                     </div>
+                    ${order.status === '待制作' ? `
+                        <button class="btn-complete" onclick="completeOrder(${order.id})">
+                            ✅ 完成制作
+                        </button>
+                    ` : ''}
                 </div>
             `).join('');
         }

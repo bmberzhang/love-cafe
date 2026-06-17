@@ -169,6 +169,16 @@ app.post('/api/orders', (req, res) => {
   res.json(order);
 });
 
+app.post('/api/orders/:id/complete', (req, res) => {
+  const id = parseInt(req.params.id);
+  const orders = readData('orders.json') || [];
+  const order = orders.find(o => o.id === id);
+  if (!order) return res.status(404).json({ error: '订单不存在' });
+  order.status = '✅ 已完成';
+  writeData('orders.json', orders);
+  res.json({ success: true, order });
+});
+
 // ============ 统计 API ============
 
 app.get('/api/stats', (req, res) => {
