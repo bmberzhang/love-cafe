@@ -619,12 +619,25 @@
 
         function applyRoleUI() {
             // 底部操作区（分类管理、添加菜品）→ 仅主厨可见
-            document.getElementById('bottom-section').style.display = myRole === 'chef' ? 'flex' : 'none';
-            // 购物车浮窗 → 仅顾客可见（主厨不需要加菜）
-            document.getElementById('cart-float').style.display = myRole === 'customer' ? 'flex' : 'none';
+            const bottom = document.getElementById('bottom-section');
+            if (bottom) bottom.style.display = myRole === 'chef' ? 'flex' : 'none';
+            // 购物车浮窗 → 仅顾客可见
+            const cartFloat = document.getElementById('cart-float');
+            if (cartFloat) cartFloat.style.display = myRole === 'customer' ? 'flex' : 'none';
             // 角色标签
-            document.getElementById('role-tag-chef').style.display = myRole === 'chef' ? 'inline-block' : 'none';
-            document.getElementById('role-tag-customer').style.display = myRole === 'customer' ? 'inline-block' : 'none';
+            const tagChef = document.getElementById('role-tag-chef');
+            if (tagChef) tagChef.style.display = myRole === 'chef' ? 'inline-block' : 'none';
+            const tagCus = document.getElementById('role-tag-customer');
+            if (tagCus) tagCus.style.display = myRole === 'customer' ? 'inline-block' : 'none';
+            // 个人页按钮样式
+            ['chef', 'customer'].forEach(r => {
+                const btn = document.getElementById(`role-btn-${r}`);
+                if (btn) {
+                    btn.style.background = r === myRole ? 'var(--primary-light)' : '';
+                    btn.style.color = r === myRole ? 'var(--primary-dark)' : '';
+                    btn.style.borderColor = r === myRole ? 'var(--primary)' : '';
+                }
+            });
         }
 
         // ============ 加载数据 ============
@@ -1180,6 +1193,7 @@
 
         // ============ 启动 ============
         async function init() {
+            applyRoleUI(); // 从 localStorage 恢复身份
             await loadSettings();
             await loadAll();
             await loadOrders();
