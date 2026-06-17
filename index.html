@@ -98,8 +98,17 @@
             background: linear-gradient(135deg, var(--primary-light), var(--primary));
             display: flex; align-items: center; justify-content: center;
             font-size: 36px; flex-shrink: 0; overflow: hidden;
+            position: relative;
         }
         .food-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .food-delete {
+            position: absolute; top: -2px; right: -2px; width: 22px; height: 22px;
+            border-radius: 50%; background: rgba(255, 71, 87, 0.9); color: white;
+            border: none; font-size: 12px; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; line-height: 1;
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .food-item:hover .food-delete, .food-item:active .food-delete { opacity: 1; }
         .food-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; }
         .food-name { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.3; }
         .food-name { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.3; }
@@ -637,7 +646,9 @@
                 <div class="category-title">${category.emoji} ${category.name}</div>
                 ${categoryFoods.map(food => `
                     <div class="food-item">
-                        <div class="food-img">${food.image ? `<img src="${food.image}" alt="${food.name}">` : food.emoji}</div>
+                        <div class="food-img">${food.image ? `<img src="${food.image}" alt="${food.name}">` : food.emoji}
+                            <button class="food-delete" onclick="deleteFood(${food.id}, event)">✕</button>
+                        </div></div>
                         <div class="food-info">
                             <div>
                                 <div class="food-name">${food.name}</div>
@@ -658,6 +669,15 @@
         }
 
         // ============ 购物车 ============
+        async function deleteFood(foodId, event) {
+            if (event) event.stopPropagation();
+            if (!confirm('确定要删除这道菜吗？')) return;
+            await API.del(`/api/foods/${foodId}`);
+            await loadAll();
+            updateStats();
+            showToast('🗑️ 已删除');
+        }
+
         async function updateCart(foodId, delta) {
             const result = await API.post('/api/cart', { foodId, delta });
             cart = result;
