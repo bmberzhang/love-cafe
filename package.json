@@ -1,0 +1,12 @@
+{
+  "name": "love-cafe-server",
+  "version": "1.0.0",
+  "description": "甜蜜小厨 - 恋爱点餐互通版",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
