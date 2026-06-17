@@ -688,10 +688,28 @@
             }
             const categoryFoods = foods.filter(f => f.categoryId === currentCategory);
             if (categoryFoods.length === 0) {
-                list.innerHTML = `
-                    <div class="category-title">${category.emoji} ${category.name}</div>
-                    <div class="empty-state"><div class="empty-icon">🍽️</div><div>还没有菜品哦~<br>快去添加吧 💕</div></div>
-                `;
+                if (currentCategory === 1) {
+                    list.innerHTML = `
+                        <div class="category-title">${category.emoji} ${category.name}</div>
+                        <div class="order-card" style="text-align:center;padding:30px;">
+                            <div style="font-size:48px;margin-bottom:16px;">👑</div>
+                            <div style="font-size:18px;font-weight:700;color:var(--primary-dark);margin-bottom:12px;">
+                                本店只为刘琦公主所有 👸
+                            </div>
+                            <div style="font-size:14px;color:var(--text-light);line-height:1.8;">
+                                一切解释权归刘老板所有 😎
+                            </div>
+                            <div style="margin-top:20px;font-size:12px;color:var(--text-light);border-top:1px solid var(--border);padding-top:16px;">
+                                公主想吃什么随便点 ❤️
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    list.innerHTML = `
+                        <div class="category-title">${category.emoji} ${category.name}</div>
+                        <div class="empty-state"><div class="empty-icon">🍽️</div><div>还没有菜品哦~<br>快去添加吧 💕</div></div>
+                    `;
+                }
                 return;
             }
             list.innerHTML = `
