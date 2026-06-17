@@ -155,7 +155,7 @@ app.post('/api/orders', (req, res) => {
 
   const order = {
     id: Date.now(),
-    time: new Date().toLocaleString('zh-CN'),
+    time: chinaTime(),
     items: orderItems,
     totalLove,
     status: '待制作'
