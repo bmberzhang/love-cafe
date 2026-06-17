@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>甜蜜小厨 - 恋爱点餐</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="甜蜜小厨">
+    <link rel="apple-touch-icon" href="./icon-192x192.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="甜蜜小厨">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #FF8FA3;
+            --primary-light: #FFB8C5;
+            --primary-dark: #E85D75;
+            --bg: #FFF5F7;
+            --card-bg: #FFFFFF;
+            --text: #4A4A4A;
+            --text-light: #888888;
+            --border: #FFE4E9;
+        }
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 140px;
+        }
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 20px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(255, 143, 163, 0.3);
+        }
+        .header-content { display: flex; align-items: center; justify-content: space-between; }
+        .header-left, .header-right { display: flex; align-items: center; gap: 10px; }
+        .avatar {
+            width: 44px; height: 44px; border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            background: #fff; display: flex; align-items: center;
+            justify-content: center; font-size: 22px;
+        }
+        .user-info { color: white; }
+        .user-name { font-size: 14px; font-weight: 500; opacity: 0.9; }
+        .user-role {
+            font-size: 11px; background: rgba(255, 255, 255, 0.3);
+            padding: 2px 8px; border-radius: 10px; display: inline-block; margin-top: 2px;
+        }
+        .shop-name { color: white; font-size: 18px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .level-badge {
+            background: rgba(255, 255, 255, 0.25); color: white;
+            padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        .main-container { display: flex; min-height: calc(100vh - 280px); margin-top: 10px; }
+        .category-nav {
+            width: 100px; background: var(--card-bg);
+            overflow-y: auto; border-right: 1px solid var(--border); flex-shrink: 0;
+        }
+        .category-item {
+            padding: 16px 10px; text-align: center; font-size: 13px;
+            color: var(--text-light); cursor: pointer; transition: all 0.3s;
+            border-left: 3px solid transparent; line-height: 1.4;
+        }
+        .category-item.active {
+            background: var(--bg); color: var(--primary-dark);
+            border-left-color: var(--primary); font-weight: 500;
+        }
+        .category-icon { display: block; font-size: 20px; margin-bottom: 4px; }
+        .food-list { flex: 1; overflow-y: auto; padding: 12px; background: var(--bg); }
+        .category-title {
+            font-size: 16px; font-weight: 700; color: var(--primary-dark);
+            margin-bottom: 12px; padding: 8px 0; display: flex; align-items: center; gap: 6px;
+        }
+        .category-title::before, .category-title::after { content: '—'; color: var(--primary-light); }
+        .food-item {
+            background: var(--card-bg); border-radius: 16px; padding: 12px;
+            margin-bottom: 12px; display: flex; gap: 12px;
+            box-shadow: 0 2px 12px rgba(255, 143, 163, 0.08);
+            transition: transform 0.2s;
+        }
+        .food-item:active { transform: scale(0.98); }
+        .food-img {
+            width: 80px; height: 80px; border-radius: 12px; object-fit: cover;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 36px; flex-shrink: 0;
+        }
+        .food-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .food-name { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.3; }
+        .food-tags { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+        .food-tag {
+            font-size: 10px; color: var(--primary); background: var(--bg);
+            padding: 2px 6px; border-radius: 6px;
+        }
+        .food-price { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+        .price { display: flex; align-items: center; gap: 4px; color: var(--primary-dark); font-weight: 700; font-size: 16px; }
+        .price-icon { font-size: 14px; }
+        .quantity-control { display: flex; align-items: center; gap: 8px; }
+        .btn-minus, .btn-plus {
+            width: 28px; height: 28px; border-radius: 50%; border: none;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-minus { background: var(--bg); color: var(--primary); }
+        .btn-plus { background: var(--primary); color: white; }
+        .btn-minus:active, .btn-plus:active { transform: scale(0.9); }
+        .quantity { font-size: 15px; font-weight: 600; min-width: 24px; text-align: center; }
+        .hot-tip {
+            background: var(--primary-light); color: var(--primary-dark);
+            text-align: center; padding: 8px 16px; font-size: 13px; font-weight: 500;
+            border-bottom: 1px solid var(--border); display: flex;
+            align-items: center; justify-content: center; gap: 6px;
+        }
+        .bottom-section {
+            position: fixed; bottom: 60px; left: 0; right: 0;
+            background: var(--card-bg); padding: 12px 16px;
+            display: flex; gap: 12px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 90;
+        }
+        .btn-manage, .btn-add {
+            flex: 1; padding: 12px 20px; border-radius: 24px;
+            border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s;
+        }
+        .btn-manage { background: var(--bg); color: var(--primary-dark); border: 1px solid var(--primary-light); }
+        .btn-add { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; box-shadow: 0 4px 15px rgba(255,143,163,0.4); }
+        .btn-manage:active, .btn-add:active { transform: scale(0.98); }
+        .tab-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--card-bg); display: flex;
+            justify-content: space-around; padding: 8px 0;
+            border-top: 1px solid var(--border); z-index: 100;
+        }
+        .tab-item {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 4px; padding: 4px 16px; cursor: pointer; transition: all 0.2s;
+        }
+        .tab-item.active { color: var(--primary); }
+        .tab-item:not(.active) { color: var(--text-light); }
+        .tab-icon { font-size: 22px; }
+        .tab-text { font-size: 11px; }
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 200; align-items: flex-end; justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: var(--card-bg); width: 100%; max-height: 80vh;
+            border-radius: 24px 24px 0 0; padding: 24px; animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { font-size: 18px; font-weight: 700; color: var(--text); }
+        .modal-close {
+            width: 32px; height: 32px; border-radius: 50%; background: var(--bg);
+            border: none; font-size: 18px; cursor: pointer; color: var(--text-light);
+        }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; color: var(--text); margin-bottom: 8px; font-weight: 500; }
+        .form-input, .form-select {
+            width: 100%; padding: 14px 16px; border: 1px solid var(--border);
+            border-radius: 12px; font-size: 15px; background: var(--bg); transition: all 0.2s;
+        }
+        .form-input:focus, .form-select:focus { outline: none; border-color: var(--primary); }
+        .emoji-picker { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+        .emoji-option {
+            width: 44px; height: 44px; border-radius: 12px; background: var(--bg);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;
+        }
+        .emoji-option:hover, .emoji-option.selected { border-color: var(--primary); background: var(--primary-light); }
+        .btn-submit {
+            width: 100%; padding: 16px; border-radius: 24px; border: none;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px;
+        }
+        .cart-float {
+            position: fixed; bottom: 140px; right: 16px; width: 56px; height: 56px;
+            border-radius: 50%; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            display: flex; align-items: center; justify-content: center; font-size: 24px;
+            box-shadow: 0 4px 20px rgba(255,143,163,0.5); cursor: pointer; z-index: 80; transition: transform 0.2s;
+        }
+        .cart-float:active { transform: scale(0.95); }
+        .cart-count {
+            position: absolute; top: -4px; right: -4px; background: #FF4757; color: white;
+            width: 22px; height: 22px; border-radius: 50%; font-size: 12px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .page { display: none; padding: 16px; padding-bottom: 140px; }
+        .page.active { display: block; }
+        .order-card {
+            background: var(--card-bg); border-radius: 16px; padding: 16px;
+            margin-bottom: 12px; box-shadow: 0 2px 12px rgba(255,143,163,0.08);
+        }
+        .order-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+        }
+        .order-time { font-size: 13px; color: var(--text-light); }
+        .order-status {
+            font-size: 12px; color: var(--primary); background: var(--bg);
+            padding: 4px 10px; border-radius: 10px;
+        }
+        .order-item { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
+        .order-total {
+            display: flex; justify-content: space-between; margin-top: 12px;
+            padding-top: 12px; border-top: 1px solid var(--border); font-weight: 700;
+        }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-light); }
+        .empty-icon { font-size: 60px; margin-bottom: 16px; }
+        .category-manage-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px; background: var(--bg); border-radius: 12px; margin-bottom: 10px;
+        }
+        .btn-delete { background: #FF4757; color: white; border: none; padding: 8px 16px; border-radius: 12px; font-size: 13px; cursor: pointer; }
+        .cart-modal .modal-content { max-height: 70vh; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+        .cart-item-info { display: flex; align-items: center; gap: 10px; }
+        .cart-item-emoji { font-size: 28px; }
+        .cart-item-name { font-size: 15px; }
+        .cart-item-price { font-size: 13px; color: var(--primary-dark); }
+        .cart-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 2px solid var(--border); }
+        .cart-total { font-size: 16px; }
+        .cart-total-love { font-size: 20px; font-weight: 700; color: var(--primary-dark); }
+        .btn-confirm {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white; border: none; padding: 14px 32px; border-radius: 24px; font-size: 15px; font-weight: 600; cursor: pointer;
+        }
+        .clear-cart { text-align: center; color: var(--text-light); font-size: 13px; margin-top: 12px; cursor: pointer; }
+        .toast {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8); color: white; padding: 20px 30px;
+            border-radius: 16px; font-size: 16px; z-index: 999;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        }
+        .toast.show { opacity: 1; }
+        .order-badge {
+            position: absolute; top: -4px; right: -4px; background: #FF4757; color: white;
+            width: 22px; height: 22px; border-radius: 50%; font-size: 12px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .tab-item { position: relative; }
+        @media (max-width: 400px) {
+            .category-nav { width: 85px; }
+            .food-img { width: 70px; height: 70px; font-size: 30px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 首页 -->
+    <div id="page-home" class="page active">
+        <div class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="avatar">👨‍🍳</div>
+                    <div class="user-info">
+                        <div class="user-name">主厨</div>
+                        <span class="user-role">老板</span>
+                    </div>
+                </div>
+                <div class="shop-name">💕 甜蜜小厨 💕</div>
+                <div class="header-right">
+                    <div class="user-info" style="text-align: right;">
+                        <div class="user-name">宝贝</div>
+                        <span class="user-role">顾客</span>
+                    </div>
+                    <div class="avatar">👸</div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 12px;">
+                <span class="level-badge">💖 爱心值 LV.<span id="love-level">1</span></span>
+            </div>
+        </div>
+
+        <!-- 实时提示条 -->
+        <div class="hot-tip" id="hot-tip">
+            💕 两人打开同一个链接，你加菜她下单，实时互通～
+        </div>
+
+        <div class="main-container">
+            <div class="category-nav" id="category-nav"></div>
+            <div class="food-list" id="food-list"></div>
+        </div>
+    </div>
+
+    <!-- 订单页 -->
+    <div id="page-orders" class="page">
+        <div class="header">
+            <div style="text-align: center; color: white;">
+                <div style="font-size: 18px; font-weight: 700;">💌 她的心意 💌</div>
+                <div style="font-size: 13px; opacity: 0.9; margin-top: 4px;">她一点下单，你这里实时出现～</div>
+            </div>
+        </div>
+        <div id="orders-list"></div>
+    </div>
+
+    <!-- 个人中心页 -->
+    <div id="page-profile" class="page">
+        <div class="header">
+            <div style="text-align: center; color: white;">
+                <div style="font-size: 18px; font-weight: 700;">💕 我们的小厨 💕</div>
+            </div>
+        </div>
+        <div style="padding: 20px;">
+            <div class="order-card" style="text-align: center; padding: 30px;">
+                <div style="font-size: 60px; margin-bottom: 16px;">👨‍🍳💕👸</div>
+                <div style="font-size: 18px; font-weight: 700; color: var(--primary-dark); margin-bottom: 8px;">甜蜜小厨</div>
+                <div style="font-size: 14px; color: var(--text-light);">为心爱的人做每一顿饭</div>
+            </div>
+            <div class="order-card">
+                <div style="font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--primary-dark);">📊 恋爱数据</div>
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                    <div>
+                        <div style="font-size: 28px; font-weight: 700; color: var(--primary);">🍽️</div>
+                        <div style="font-size: 12px; color: var(--text-light); margin-top: 4px;">菜品总数</div>
+                        <div style="font-size: 18px; font-weight: 700;" id="total-dishes">0</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 28px; font-weight: 700; color: var(--primary);">💝</div>
+                        <div style="font-size: 12px; color: var(--text-light); margin-top: 4px;">订单总数</div>
+                        <div style="font-size: 18px; font-weight: 700;" id="total-orders">0</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 28px; font-weight: 700; color: var(--primary);">❤️</div>
+                        <div style="font-size: 12px; color: var(--text-light); margin-top: 4px;">爱心累计</div>
+                        <div style="font-size: 18px; font-weight: 700;" id="total-love">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-section">
+        <button class="btn-manage" onclick="showCategoryManage()">📂 分类管理</button>
+        <button class="btn-add" onclick="showAddFood()">➕ 添加菜品</button>
+    </div>
+
+    <div class="cart-float" onclick="showCart()">
+        🛒
+        <span class="cart-count" id="cart-count" style="display: none;">0</span>
+    </div>
+
+    <div class="tab-bar">
+        <div class="tab-item" onclick="switchTab('home', this)">
+            <span class="tab-icon">🍽️</span>
+            <span class="tab-text">恋爱餐厅</span>
+        </div>
+        <div class="tab-item" onclick="switchTab('orders', this)">
+            <span class="tab-icon">💌</span>
+            <span class="tab-text">她的心意</span>
+            <span class="order-badge" id="order-badge" style="display:none;">0</span>
+        </div>
+        <div class="tab-item" onclick="switchTab('profile', this)">
+            <span class="tab-icon">💕</span>
+            <span class="tab-text">我们</span>
+        </div>
+    </div>
+
+    <!-- 添加菜品弹窗 -->
+    <div class="modal" id="modal-add-food">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">➕ 添加新菜品</span>
+                <button class="modal-close" onclick="closeModal('modal-add-food')">✕</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">选择图标</label>
+                <div class="emoji-picker" id="food-emoji-picker">
+                    <span class="emoji-option selected" data-emoji="🥘">🥘</span>
+                    <span class="emoji-option" data-emoji="🍖">🍖</span>
+                    <span class="emoji-option" data-emoji="🥩">🥩</span>
+                    <span class="emoji-option" data-emoji="🍗">🍗</span>
+                    <span class="emoji-option" data-emoji="🥬">🥬</span>
+                    <span class="emoji-option" data-emoji="🥗">🥗</span>
+                    <span class="emoji-option" data-emoji="🍲">🍲</span>
+                    <span class="emoji-option" data-emoji="🍜">🍜</span>
+                    <span class="emoji-option" data-emoji="🍚">🍚</span>
+                    <span class="emoji-option" data-emoji="🥟">🥟</span>
+                    <span class="emoji-option" data-emoji="🍤">🍤</span>
+                    <span class="emoji-option" data-emoji="🦀">🦀</span>
+                    <span class="emoji-option" data-emoji="🐟">🐟</span>
+                    <span class="emoji-option" data-emoji="🍰">🍰</span>
+                    <span class="emoji-option" data-emoji="🍮">🍮</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">菜品名称</label>
+                <input type="text" class="form-input" id="food-name" placeholder="例如：红烧排骨">
+            </div>
+            <div class="form-group">
+                <label class="form-label">选择分类</label>
+                <select class="form-select" id="food-category"></select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">标签（选填，用逗号分隔）</label>
+                <input type="text" class="form-input" id="food-tags" placeholder="例如：招牌,微辣,宝贝最爱">
+            </div>
+            <div class="form-group">
+                <label class="form-label">爱心值（代表她喜欢程度）</label>
+                <input type="number" class="form-input" id="food-love" placeholder="10" value="10">
+            </div>
+            <button class="btn-submit" onclick="addFood()">💕 添加菜品</button>
+        </div>
+    </div>
+
+    <!-- 分类管理弹窗 -->
+    <div class="modal" id="modal-category">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">📂 分类管理</span>
+                <button class="modal-close" onclick="closeModal('modal-category')">✕</button>
+            </div>
+            <div id="category-list"></div>
+            <div class="form-group" style="margin-top: 20px;">
+                <label class="form-label">添加新分类</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" class="form-input" id="new-category-name" placeholder="分类名称" style="flex: 1;">
+                    <input type="text" class="form-input" id="new-category-emoji" placeholder="图标" style="width: 60px; text-align: center;" value="🍽️">
+                </div>
+            </div>
+            <button class="btn-submit" onclick="addCategory()">➕ 添加分类</button>
+        </div>
+    </div>
+
+    <!-- 购物车弹窗 -->
+    <div class="modal cart-modal" id="modal-cart">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">🛒 她选的美食</span>
+                <button class="modal-close" onclick="closeModal('modal-cart')">✕</button>
+            </div>
+            <div id="cart-items"></div>
+            <div class="cart-footer">
+                <div>
+                    <div class="cart-total">总计爱心值</div>
+                    <div class="cart-total-love">❤️ <span id="cart-total-love">0</span></div>
+                </div>
+                <button class="btn-confirm" onclick="submitOrder()">💕 确认点餐</button>
+            </div>
+            <div class="clear-cart" onclick="clearCart()">清空购物车</div>
+        </div>
+    </div>
+
+    <script>
+        // ============ API 封装 ============
+        const API = {
+            async get(path) {
+                const res = await fetch(path);
+                return res.json();
+            },
+            async post(path, body) {
+                const res = await fetch(path, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                return res.json();
+            },
+            async del(path) {
+                const res = await fetch(path, { method: 'DELETE' });
+                return res.json();
+            }
+        };
+
+        // ============ 状态 ============
+        let categories = [];
+        let foods = [];
+        let cart = {};
+        let currentCategory = 1;
+        let selectedEmoji = '🥘';
+        let lastOrderCount = 0;
+
+        // ============ 加载数据 ============
+        async function loadAll() {
+            const [cats, fds, c] = await Promise.all([
+                API.get('/api/categories'),
+                API.get('/api/foods'),
+                API.get('/api/cart')
+            ]);
+            categories = cats;
+            foods = fds;
+            cart = c;
+            if (categories.length > 0 && !categories.find(c => c.id === currentCategory)) {
+                currentCategory = categories[0].id;
+            }
+            renderAll();
+        }
+
+        // ============ 渲染 ============
+        function renderAll() {
+            renderCategories();
+            renderFoods();
+            updateCartCount();
+        }
+
+        function renderCategories() {
+            const nav = document.getElementById('category-nav');
+            nav.innerHTML = categories.map(cat => `
+                <div class="category-item ${cat.id === currentCategory ? 'active' : ''}" onclick="selectCategory(${cat.id})">
+                    <span class="category-icon">${cat.emoji}</span>
+                    <span>${cat.name}</span>
+                </div>
+            `).join('');
+        }
+
+        function selectCategory(id) {
+            currentCategory = id;
+            renderCategories();
+            renderFoods();
+        }
+
+        function renderFoods() {
+            const list = document.getElementById('food-list');
+            const category = categories.find(c => c.id === currentCategory);
+            if (!category) {
+                list.innerHTML = `<div class="empty-state"><div class="empty-icon">🍽️</div><div>请先添加分类~</div></div>`;
+                return;
+            }
+            const categoryFoods = foods.filter(f => f.categoryId === currentCategory);
+            if (categoryFoods.length === 0) {
+                list.innerHTML = `
+                    <div class="category-title">${category.emoji} ${category.name}</div>
+                    <div class="empty-state"><div class="empty-icon">🍽️</div><div>还没有菜品哦~<br>快去添加吧 💕</div></div>
+                `;
+                return;
+            }
+            list.innerHTML = `
+                <div class="category-title">${category.emoji} ${category.name}</div>
+                ${categoryFoods.map(food => `
+                    <div class="food-item">
+                        <div class="food-img">${food.emoji}</div>
+                        <div class="food-info">
+                            <div>
+                                <div class="food-name">${food.name}</div>
+                                <div class="food-tags">${(food.tags || []).map(t => `<span class="food-tag">${t}</span>`).join('')}</div>
+                            </div>
+                            <div class="food-price">
+                                <div class="price"><span class="price-icon">❤️</span><span>${food.love}</span></div>
+                                <div class="quantity-control">
+                                    ${cart[food.id] ? `<button class="btn-minus" onclick="updateCart(${food.id}, -1)">−</button><span class="quantity">${cart[food.id]}</span>` : ''}
+                                    <button class="btn-plus" onclick="updateCart(${food.id}, 1)">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        // ============ 购物车 ============
+        async function updateCart(foodId, delta) {
+            const result = await API.post('/api/cart', { foodId, delta });
+            cart = result;
+            renderAll();
+        }
+
+        function updateCartCount() {
+            const count = Object.values(cart).reduce((a, b) => a + b, 0);
+            const badge = document.getElementById('cart-count');
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        async function showCart() {
+            // 重新获取最新购物车
+            cart = await API.get('/api/cart');
+            const cartItems = document.getElementById('cart-items');
+            const items = Object.entries(cart);
+
+            if (items.length === 0) {
+                cartItems.innerHTML = `<div class="empty-state"><div class="empty-icon">🛒</div><div>购物车是空的哦~<br>快去挑选宝贝爱吃的 💕</div></div>`;
+                document.getElementById('cart-total-love').textContent = '0';
+            } else {
+                let totalLove = 0;
+                cartItems.innerHTML = items.map(([foodId, qty]) => {
+                    const food = foods.find(f => f.id == foodId);
+                    totalLove += (food ? food.love : 0) * qty;
+                    return `
+                        <div class="cart-item">
+                            <div class="cart-item-info">
+                                <span class="cart-item-emoji">${food ? food.emoji : '🍽️'}</span>
+                                <div>
+                                    <div class="cart-item-name">${food ? food.name : '未知'}</div>
+                                    <div class="cart-item-price">❤️ ${food ? food.love : 0} × ${qty}</div>
+                                </div>
+                            </div>
+                            <div class="quantity-control">
+                                <button class="btn-minus" onclick="updateCartFromModal(${foodId}, -1)">−</button>
+                                <span class="quantity">${qty}</span>
+                                <button class="btn-plus" onclick="updateCartFromModal(${foodId}, 1)">+</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                document.getElementById('cart-total-love').textContent = totalLove;
+            }
+            document.getElementById('modal-cart').classList.add('active');
+        }
+
+        async function updateCartFromModal(foodId, delta) {
+            await updateCart(foodId, delta);
+            showCart();
+        }
+
+        async function clearCart() {
+            await API.post('/api/cart/clear', {});
+            cart = {};
+            renderAll();
+            closeModal('modal-cart');
+        }
+
+        // ============ 订单 ============
+        async function submitOrder() {
+            const result = await API.post('/api/orders', {});
+            cart = {};
+            renderAll();
+            closeModal('modal-cart');
+            showToast('💕 下单成功！快去厨房为她做饭吧～');
+            // 刷新订单
+            loadOrders();
+        }
+
+        async function loadOrders() {
+            const orders = await API.get('/api/orders');
+            const list = document.getElementById('orders-list');
+
+            if (orders.length === 0) {
+                list.innerHTML = `<div class="empty-state"><div class="empty-icon">💌</div><div>还没有订单哦~<br>等宝贝点餐吧 💕</div></div>`;
+                document.getElementById('order-badge').style.display = 'none';
+                return;
+            }
+
+            if (orders.length > lastOrderCount) {
+                // 有新订单！播放提示
+                showToast('💌 宝贝下单啦！快去看看～');
+                lastOrderCount = orders.length;
+            }
+
+            document.getElementById('order-badge').textContent = orders.length;
+            document.getElementById('order-badge').style.display = 'flex';
+
+            list.innerHTML = orders.map(order => `
+                <div class="order-card">
+                    <div class="order-header">
+                        <span class="order-time">🕐 ${order.time}</span>
+                        <span class="order-status">${order.status}</span>
+                    </div>
+                    ${order.items.map(item => `
+                        <div class="order-item">
+                            <span>${item.emoji} ${item.name} × ${item.qty}</span>
+                            <span>❤️ ${item.love * item.qty}</span>
+                        </div>
+                    `).join('')}
+                    <div class="order-total">
+                        <span>共计 ${order.items.reduce((a, b) => a + b.qty, 0)} 道菜</span>
+                        <span>❤️ ${order.totalLove}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ============ 菜品管理 ============
+        async function showAddFood() {
+            const select = document.getElementById('food-category');
+            select.innerHTML = categories.filter(c => c.id !== 1).map(c => `
+                <option value="${c.id}">${c.emoji} ${c.name}</option>
+            `).join('');
+            document.getElementById('modal-add-food').classList.add('active');
+        }
+
+        async function addFood() {
+            const name = document.getElementById('food-name').value.trim();
+            const categoryId = parseInt(document.getElementById('food-category').value);
+            const tagsStr = document.getElementById('food-tags').value.trim();
+            const love = parseInt(document.getElementById('food-love').value) || 10;
+
+            if (!name) { alert('请输入菜品名称~'); return; }
+
+            const tags = tagsStr ? tagsStr.split(/[,，]/).map(t => t.trim()).filter(t => t) : [];
+
+            await API.post('/api/foods', { name, emoji: selectedEmoji, categoryId, tags, love });
+
+            document.getElementById('food-name').value = '';
+            document.getElementById('food-tags').value = '';
+            document.getElementById('food-love').value = '10';
+            closeModal('modal-add-food');
+
+            currentCategory = categoryId;
+            await loadAll();
+            updateStats();
+            showToast('💕 菜品添加成功！');
+        }
+
+        // ============ 分类管理 ============
+        async function showCategoryManage() {
+            const list = document.getElementById('category-list');
+            list.innerHTML = categories.filter(c => c.id !== 1).map(cat => `
+                <div class="category-manage-item">
+                    <span>${cat.emoji} ${cat.name}</span>
+                    <button class="btn-delete" onclick="deleteCategory(${cat.id})">删除</button>
+                </div>
+            `).join('');
+            document.getElementById('modal-category').classList.add('active');
+        }
+
+        async function addCategory() {
+            const name = document.getElementById('new-category-name').value.trim();
+            const emoji = document.getElementById('new-category-emoji').value.trim() || '🍽️';
+            if (!name) { alert('请输入分类名称~'); return; }
+
+            await API.post('/api/categories', { name, emoji });
+            document.getElementById('new-category-name').value = '';
+            document.getElementById('new-category-emoji').value = '🍽️';
+            await loadAll();
+            showCategoryManage();
+        }
+
+        async function deleteCategory(id) {
+            if (!confirm('确定删除这个分类吗？该分类下的菜品也会被删除哦~')) return;
+            await API.del(`/api/categories/${id}`);
+            if (currentCategory === id) currentCategory = categories.filter(c => c.id !== 1)[0]?.id || 1;
+            await loadAll();
+            showCategoryManage();
+            updateStats();
+        }
+
+        // ============ 统计 ============
+        async function updateStats() {
+            const stats = await API.get('/api/stats');
+            document.getElementById('total-dishes').textContent = stats.totalDishes;
+            document.getElementById('total-orders').textContent = stats.totalOrders;
+            document.getElementById('total-love').textContent = stats.totalLove;
+            document.getElementById('love-level').textContent = Math.floor(stats.totalLove / 50) + 1;
+        }
+
+        // ============ UI ============
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        async function switchTab(tab, el) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            document.getElementById(`page-${tab}`).classList.add('active');
+            if (el) el.classList.add('active');
+
+            if (tab === 'orders') {
+                await loadOrders();
+            } else if (tab === 'profile') {
+                await updateStats();
+            } else if (tab === 'home') {
+                cart = await API.get('/api/cart');
+                renderAll();
+            }
+        }
+
+        let toastTimer = null;
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ============ 表情选择 ============
+        document.getElementById('food-emoji-picker').addEventListener('click', function(e) {
+            if (e.target.classList.contains('emoji-option')) {
+                document.querySelectorAll('.emoji-option').forEach(el => el.classList.remove('selected'));
+                e.target.classList.add('selected');
+                selectedEmoji = e.target.dataset.emoji;
+            }
+        });
+
+        // 点击弹窗外部关闭
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('active');
+            });
+        });
+
+        // ============ 轮询 —— 实时同步！ ============
+        // 每 3 秒检查一次购物车和订单更新
+        async function pollUpdates() {
+            try {
+                const [newCart, orders, stats] = await Promise.all([
+                    API.get('/api/cart'),
+                    API.get('/api/orders'),
+                    API.get('/api/stats')
+                ]);
+
+                // 检查购物车变化
+                const oldCartStr = JSON.stringify(cart);
+                const newCartStr = JSON.stringify(newCart);
+                if (oldCartStr !== newCartStr) {
+                    cart = newCart;
+                    renderAll();
+                }
+
+                // 检查新订单
+                if (orders.length > lastOrderCount) {
+                    lastOrderCount = orders.length;
+                    if (document.getElementById('page-orders').classList.contains('active')) {
+                        loadOrders();
+                    }
+                    showToast('💌 宝贝下单啦！快去看看～');
+                }
+
+                // 更新爱心等级
+                document.getElementById('love-level').textContent = Math.floor(stats.totalLove / 50) + 1;
+
+            } catch(e) {
+                // 静默处理网络错误
+            }
+        }
+
+        // ============ 启动 ============
+        async function init() {
+            await loadAll();
+            await loadOrders();
+            await updateStats();
+            // 标记初始订单数
+            const orders = await API.get('/api/orders');
+            lastOrderCount = orders.length;
+            if (lastOrderCount > 0) {
+                document.getElementById('order-badge').textContent = lastOrderCount;
+                document.getElementById('order-badge').style.display = 'flex';
+            }
+            // 开始轮询
+            setInterval(pollUpdates, 3000);
+            console.log('💕 甜蜜小厨已启动，实时同步中...');
+        }
+
+        init();
+
+        // 注册 PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            });
+        }
+    </script>
+</body>
+</html>
