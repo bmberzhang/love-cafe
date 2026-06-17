@@ -1,0 +1,191 @@
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// 中间件
+app.use(express.json());
+app.use(express.static(path.join(__dirname)));
+
+// ============ 数据读写工具 ============
+
+const DATA_DIR = path.join(__dirname, 'data');
+
+function readData(filename) {
+  const filePath = path.join(DATA_DIR, filename);
+  try {
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function writeData(filename, data) {
+  const filePath = path.join(DATA_DIR, filename);
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+// ============ 分类 API ============
+
+app.get('/api/categories', (req, res) => {
+  const categories = readData('categories.json');
+  res.json(categories || []);
+});
+
+app.post('/api/categories', (req, res) => {
+  const { name, emoji } = req.body;
+  if (!name) return res.status(400).json({ error: '分类名不能为空' });
+
+  const categories = readData('categories.json') || [];
+  const newCat = {
+    id: Date.now(),
+    name: name.trim(),
+    emoji: emoji || '🍽️'
+  };
+  categories.push(newCat);
+  writeData('categories.json', categories);
+  res.json(newCat);
+});
+
+app.delete('/api/categories/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  let categories = readData('categories.json') || [];
+  categories = categories.filter(c => c.id !== id);
+  writeData('categories.json', categories);
+
+  // 同时删除该分类下的所有菜品
+  let foods = readData('foods.json') || [];
+  foods = foods.filter(f => f.categoryId !== id);
+  writeData('foods.json', foods);
+
+  res.json({ success: true });
+});
+
+// ============ 菜品 API ============
+
+app.get('/api/foods', (req, res) => {
+  const foods = readData('foods.json');
+  res.json(foods || []);
+});
+
+app.post('/api/foods', (req, res) => {
+  const { name, emoji, categoryId, tags, love } = req.body;
+  if (!name) return res.status(400).json({ error: '菜品名不能为空' });
+
+  const foods = readData('foods.json') || [];
+  const newFood = {
+    id: Date.now(),
+    name: name.trim(),
+    emoji: emoji || '🥘',
+    categoryId: categoryId || 2,
+    tags: tags || [],
+    love: love || 10
+  };
+  foods.push(newFood);
+  writeData('foods.json', foods);
+  res.json(newFood);
+});
+
+app.delete('/api/foods/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  let foods = readData('foods.json') || [];
+  foods = foods.filter(f => f.id !== id);
+  writeData('foods.json', foods);
+
+  // 同时清理购物车和订单中的该菜品
+  let cart = readData('cart.json') || {};
+  delete cart[id];
+  writeData('cart.json', cart);
+
+  res.json({ success: true });
+});
+
+// ============ 购物车 API ============
+
+app.get('/api/cart', (req, res) => {
+  const cart = readData('cart.json');
+  res.json(cart || {});
+});
+
+app.post('/api/cart', (req, res) => {
+  const { foodId, delta } = req.body;
+  if (!foodId) return res.status(400).json({ error: '缺少 foodId' });
+
+  let cart = readData('cart.json') || {};
+  if (!cart[foodId]) cart[foodId] = 0;
+  cart[foodId] += delta;
+
+  if (cart[foodId] <= 0) {
+    delete cart[foodId];
+  }
+
+  writeData('cart.json', cart);
+  res.json(cart);
+});
+
+app.post('/api/cart/clear', (req, res) => {
+  writeData('cart.json', {});
+  res.json({ success: true });
+});
+
+// ============ 订单 API ============
+
+app.get('/api/orders', (req, res) => {
+  const orders = readData('orders.json');
+  res.json(orders || []);
+});
+
+app.post('/api/orders', (req, res) => {
+  const cart = readData('cart.json') || {};
+  const foods = readData('foods.json') || [];
+  const items = Object.entries(cart);
+
+  if (items.length === 0) return res.status(400).json({ error: '购物车为空' });
+
+  let totalLove = 0;
+  const orderItems = items.map(([foodId, qty]) => {
+    const food = foods.find(f => f.id == foodId);
+    if (!food) return null;
+    totalLove += food.love * qty;
+    return { foodId: parseInt(foodId), name: food.name, emoji: food.emoji, love: food.love, qty };
+  }).filter(Boolean);
+
+  const order = {
+    id: Date.now(),
+    time: new Date().toLocaleString('zh-CN'),
+    items: orderItems,
+    totalLove,
+    status: '待制作'
+  };
+
+  const orders = readData('orders.json') || [];
+  orders.unshift(order);
+  writeData('orders.json', orders);
+  writeData('cart.json', {});
+
+  res.json(order);
+});
+
+// ============ 统计 API ============
+
+app.get('/api/stats', (req, res) => {
+  const foods = readData('foods.json') || [];
+  const orders = readData('orders.json') || [];
+  const totalLove = orders.reduce((sum, o) => sum + (o.totalLove || 0), 0);
+  res.json({
+    totalDishes: foods.length,
+    totalOrders: orders.length,
+    totalLove
+  });
+});
+
+// ============ 启动 ============
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`💕 甜蜜小厨服务器已启动！`);
+  console.log(`📡 监听端口: ${PORT}`);
+  console.log(`🕐 ${new Date().toLocaleString()}`);
+});
