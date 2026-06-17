@@ -182,6 +182,38 @@ app.get('/api/stats', (req, res) => {
   });
 });
 
+// ============ 导出/导入 API ============
+
+app.get('/api/export', (req, res) => {
+  const categories = readData('categories.json') || [];
+  const foods = readData('foods.json') || [];
+  const orders = readData('orders.json') || [];
+
+  const backup = { categories, foods, orders };
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Disposition', 'attachment; filename="love-cafe-backup.json"');
+  res.json(backup);
+});
+
+// 支持 JSON body 和 multipart 两种导入方式
+app.post('/api/import', (req, res) => {
+  const { categories, foods, orders } = req.body;
+
+  if (!categories || !foods || !orders) {
+    return res.status(400).json({ error: '备份文件格式不正确，缺少 categories/foods/orders 字段' });
+  }
+
+  writeData('categories.json', categories);
+  writeData('foods.json', foods);
+  writeData('cart.json', {});
+  writeData('orders.json', orders);
+
+  res.json({
+    success: true,
+    message: `导入成功！共 ${categories.length} 个分类、${foods.length} 道菜品、${orders.length} 个订单`
+  });
+});
+
 // ============ 启动 ============
 
 app.listen(PORT, '0.0.0.0', () => {
