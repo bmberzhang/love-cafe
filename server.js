@@ -72,7 +72,7 @@ app.get('/api/foods', (req, res) => {
 });
 
 app.post('/api/foods', (req, res) => {
-  const { name, emoji, categoryId, tags, love } = req.body;
+  const { name, emoji, categoryId, tags, love, image, note } = req.body;
   if (!name) return res.status(400).json({ error: '菜品名不能为空' });
 
   const foods = readData('foods.json') || [];
@@ -82,7 +82,9 @@ app.post('/api/foods', (req, res) => {
     emoji: emoji || '🥘',
     categoryId: categoryId || 2,
     tags: tags || [],
-    love: love || 10
+    love: love || 10,
+    image: image || '',
+    note: note || ''
   };
   foods.push(newFood);
   writeData('foods.json', foods);

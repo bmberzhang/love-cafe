@@ -1,10 +1,10 @@
 [
-  { "id": 1, "name": "宝贝最爱~小炒黄牛肉", "emoji": "🥩", "categoryId": 2, "tags": ["招牌", "微辣"], "love": 15 },
-  { "id": 2, "name": "青椒炒肉", "emoji": "🫑", "categoryId": 2, "tags": ["下饭"], "love": 14 },
-  { "id": 3, "name": "可乐鸡翅", "emoji": "🍗", "categoryId": 2, "tags": ["宝贝最爱", "甜甜"], "love": 16 },
-  { "id": 4, "name": "辣子鸡丁", "emoji": "🌶️", "categoryId": 2, "tags": ["麻辣"], "love": 15 },
-  { "id": 5, "name": "蒜蓉西兰花", "emoji": "🥦", "categoryId": 3, "tags": ["健康"], "love": 12 },
-  { "id": 6, "name": "番茄蛋汤", "emoji": "🍅", "categoryId": 4, "tags": ["暖胃"], "love": 11 },
-  { "id": 7, "name": "蛋炒饭", "emoji": "🍚", "categoryId": 5, "tags": ["经典"], "love": 10 },
-  { "id": 8, "name": "爱心牛排", "emoji": "🥩", "categoryId": 6, "tags": ["纪念日", "浪漫"], "love": 20 }
+  { "id": 1, "name": "宝贝最爱~小炒黄牛肉", "emoji": "🥩", "categoryId": 2, "tags": ["招牌", "微辣"], "love": 15, "image": "", "note": "" },
+  { "id": 2, "name": "青椒炒肉", "emoji": "🫑", "categoryId": 2, "tags": ["下饭"], "love": 14, "image": "", "note": "" },
+  { "id": 3, "name": "可乐鸡翅", "emoji": "🍗", "categoryId": 2, "tags": ["宝贝最爱", "甜甜"], "love": 16, "image": "", "note": "" },
+  { "id": 4, "name": "辣子鸡丁", "emoji": "🌶️", "categoryId": 2, "tags": ["麻辣"], "love": 15, "image": "", "note": "少放辣" },
+  { "id": 5, "name": "蒜蓉西兰花", "emoji": "🥦", "categoryId": 3, "tags": ["健康"], "love": 12, "image": "", "note": "" },
+  { "id": 6, "name": "番茄蛋汤", "emoji": "🍅", "categoryId": 4, "tags": ["暖胃"], "love": 11, "image": "", "note": "不要葱花" },
+  { "id": 7, "name": "蛋炒饭", "emoji": "🍚", "categoryId": 5, "tags": ["经典"], "love": 10, "image": "", "note": "" },
+  { "id": 8, "name": "爱心牛排", "emoji": "🥩", "categoryId": 6, "tags": ["纪念日", "浪漫"], "love": 20, "image": "", "note": "七分熟" }
 ]

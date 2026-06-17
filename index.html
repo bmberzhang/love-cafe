@@ -97,9 +97,11 @@
             width: 80px; height: 80px; border-radius: 12px; object-fit: cover;
             background: linear-gradient(135deg, var(--primary-light), var(--primary));
             display: flex; align-items: center; justify-content: center;
-            font-size: 36px; flex-shrink: 0;
+            font-size: 36px; flex-shrink: 0; overflow: hidden;
         }
-        .food-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .food-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .food-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; }
+        .food-name { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.3; }
         .food-name { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.3; }
         .food-tags { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
         .food-tag {
@@ -260,6 +262,12 @@
             display: flex; align-items: center; justify-content: center;
         }
         .tab-item { position: relative; }
+        .food-note {
+            font-size: 12px; color: var(--text-light); margin-top: 2px;
+            display: flex; align-items: center; gap: 3px; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
+        }
+        .food-note-icon { font-size: 11px; }
         @media (max-width: 400px) {
             .category-nav { width: 85px; }
             .food-img { width: 70px; height: 70px; font-size: 30px; }
@@ -443,6 +451,21 @@
                 <input type="text" class="form-input" id="food-tags" placeholder="例如：招牌,微辣,宝贝最爱">
             </div>
             <div class="form-group">
+                <label class="form-label">📷 菜品图片（选填）</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label class="btn-manage" style="padding: 10px 16px; font-size: 13px; cursor: pointer;">
+                        选择图片
+                        <input type="file" accept="image/*" style="display: none;" onchange="previewFoodImage(event)">
+                    </label>
+                    <div id="food-image-preview" style="width: 60px; height: 60px; border-radius: 12px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 24px; overflow: hidden; flex-shrink: 0; background-size: cover; background-position: center;">🥘</div>
+                    <span id="food-image-name" style="font-size: 12px; color: var(--text-light); display: none;">已选择</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">📝 特制备注（选填）</label>
+                <input type="text" class="form-input" id="food-note" placeholder="例如：不要辣、少放盐、多放香菜">
+            </div>
+            <div class="form-group">
                 <label class="form-label">爱心值（代表她喜欢程度）</label>
                 <input type="number" class="form-input" id="food-love" placeholder="10" value="10">
             </div>
@@ -554,6 +577,7 @@
         let settings = { chefName: '主厨', customerName: '宝贝', chefAvatar: '', customerAvatar: '' };
         let pendingChefAvatar = '';
         let pendingCustomerAvatar = '';
+        let pendingFoodImage = '';
 
         // ============ 加载数据 ============
         async function loadAll() {
@@ -613,11 +637,12 @@
                 <div class="category-title">${category.emoji} ${category.name}</div>
                 ${categoryFoods.map(food => `
                     <div class="food-item">
-                        <div class="food-img">${food.emoji}</div>
+                        <div class="food-img">${food.image ? `<img src="${food.image}" alt="${food.name}">` : food.emoji}</div>
                         <div class="food-info">
                             <div>
                                 <div class="food-name">${food.name}</div>
                                 <div class="food-tags">${(food.tags || []).map(t => `<span class="food-tag">${t}</span>`).join('')}</div>
+                                ${food.note ? `<div class="food-note"><span class="food-note-icon">📝</span>${food.note}</div>` : ''}
                             </div>
                             <div class="food-price">
                                 <div class="price"><span class="price-icon">❤️</span><span>${food.love}</span></div>
@@ -765,7 +790,30 @@
             select.innerHTML = categories.filter(c => c.id !== 1).map(c => `
                 <option value="${c.id}">${c.emoji} ${c.name}</option>
             `).join('');
+            pendingFoodImage = '';
+            document.getElementById('food-image-preview').innerHTML = '🥘';
+            document.getElementById('food-image-name').style.display = 'none';
             document.getElementById('modal-add-food').classList.add('active');
+        }
+
+        function previewFoodImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > 500 * 1024) {
+                showToast('⚠️ 图片不能超过 500KB');
+                event.target.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const dataUrl = e.target.result;
+                const preview = document.getElementById('food-image-preview');
+                preview.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">`;
+                document.getElementById('food-image-name').style.display = 'inline';
+                pendingFoodImage = dataUrl;
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
         }
 
         async function addFood() {
@@ -773,16 +821,25 @@
             const categoryId = parseInt(document.getElementById('food-category').value);
             const tagsStr = document.getElementById('food-tags').value.trim();
             const love = parseInt(document.getElementById('food-love').value) || 10;
+            const note = document.getElementById('food-note').value.trim();
 
             if (!name) { alert('请输入菜品名称~'); return; }
 
             const tags = tagsStr ? tagsStr.split(/[,，]/).map(t => t.trim()).filter(t => t) : [];
 
-            await API.post('/api/foods', { name, emoji: selectedEmoji, categoryId, tags, love });
+            await API.post('/api/foods', {
+                name, emoji: selectedEmoji, categoryId, tags, love,
+                image: pendingFoodImage,
+                note
+            });
 
             document.getElementById('food-name').value = '';
             document.getElementById('food-tags').value = '';
             document.getElementById('food-love').value = '10';
+            document.getElementById('food-note').value = '';
+            pendingFoodImage = '';
+            document.getElementById('food-image-preview').innerHTML = '🥘';
+            document.getElementById('food-image-name').style.display = 'none';
             closeModal('modal-add-food');
 
             currentCategory = categoryId;
