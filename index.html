@@ -171,6 +171,7 @@
         .modal-content {
             background: var(--card-bg); width: 100%; max-height: 80vh;
             border-radius: 24px 24px 0 0; padding: 24px; animation: slideUp 0.3s ease;
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
         }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
