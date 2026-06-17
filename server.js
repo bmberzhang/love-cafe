@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 中间件
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname)));
 
 // ============ 数据读写工具 ============
@@ -190,6 +190,30 @@ app.get('/api/stats', (req, res) => {
     totalOrders: orders.length,
     totalLove
   });
+});
+
+// ============ 用户设置 API ============
+
+app.get('/api/settings', (req, res) => {
+  const settings = readData('settings.json') || {
+    chefName: '主厨',
+    customerName: '宝贝',
+    chefAvatar: '',
+    customerAvatar: ''
+  };
+  res.json(settings);
+});
+
+app.post('/api/settings', (req, res) => {
+  const { chefName, customerName, chefAvatar, customerAvatar } = req.body;
+  const settings = {
+    chefName: (chefName || '主厨').trim(),
+    customerName: (customerName || '宝贝').trim(),
+    chefAvatar: chefAvatar || '',
+    customerAvatar: customerAvatar || ''
+  };
+  writeData('settings.json', settings);
+  res.json({ success: true, settings });
 });
 
 // ============ 导出/导入 API ============
