@@ -144,6 +144,7 @@ app.post('/api/orders', (req, res) => {
   const cart = readData('cart.json') || {};
   const foods = readData('foods.json') || [];
   const items = Object.entries(cart);
+  const notes = req.body.notes || {};
 
   if (items.length === 0) return res.status(400).json({ error: '购物车为空' });
 
@@ -152,7 +153,14 @@ app.post('/api/orders', (req, res) => {
     const food = foods.find(f => f.id == foodId);
     if (!food) return null;
     totalLove += food.love * qty;
-    return { foodId: parseInt(foodId), name: food.name, emoji: food.emoji, love: food.love, qty };
+    return {
+      foodId: parseInt(foodId),
+      name: food.name,
+      emoji: food.emoji,
+      love: food.love,
+      qty,
+      note: notes[foodId] || ''
+    };
   }).filter(Boolean);
 
   const order = {
